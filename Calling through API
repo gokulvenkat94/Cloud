@@ -1,0 +1,94 @@
+
+
+# This code sample uses the 'requests' library:
+# http://docs.python-requests.org
+
+
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+from flask import Flask
+
+app = Flask(__name__)
+
+# Define a route that handles GET requests
+
+@app.route('/createJira', methods=['POST'])   ---->> 
+        //(@)  due to the decoratore like @app.route('/create) when our we get this request the below def createJira() function we 	dont need to call it like createJira() 
+        // @flakitem to tell the system that if some is trying to do this execute below code.  simple u write a function and when ever some one do / or / new run below code..   
+        // until now we used to call inside the code now we are using @ to do when the client used that we will execute below 
+
+//note : where ever api called (http://ec2instance/post - below code will exceute )
+
+@app.route('/createJira', methods=['POST']) 
+def createJira():
+
+    url = "https://"mailfromjira".atlassian.net/rest/api/3/issue"
+
+    API_TOKEN=""  #generate access token in the jira to access it 
+
+    auth = HTTPBasicAuth("", API_TOKEN) // mailid/ user name of jira and jira api token 
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+
+#our contetn or something like that 
+
+    payload = json.dumps( {
+        "fields": {
+        "description": {
+            "content": [
+                {
+                    "content": [
+                        {
+                            "text": "Order entry fails when selecting supplier.",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "paragraph"
+                    }
+                ],
+            "type": "doc",
+             "version": 1
+        },
+        "project": {
+           "key": "AB"
+        },
+        "issuetype": {
+            "id": "10006"
+        },
+        "summary": "Main order flow broken",
+    },
+    "update": {}
+    } )
+
+
+
+
+# below the api request start / initiate / triggere
+
+    response = requests.request(
+        "POST",
+        url,
+        data=payload,
+        headers=headers,
+        auth=auth
+    )
+
+    return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
+
+
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+	
+	
+	got to git hub -> settings-> webhooks-> and give the server link (in this case got to ec2 and copy its link) -> and add to that link to port and required name (link:5000/Createjira) and give required tags 
+	
+	
+	summary now with webhook it will send the data through dumpload to ec2/application/python and that will run the api create jira code in it and send that to jira through taccess token and email which u mentioned in the api script 
+	
