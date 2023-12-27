@@ -1,0 +1,46 @@
+import boto3
+
+def lambda_handler(event,context):
+	ec2 = boto3.client('ec2')
+
+	response = ec2.describe_snapshots(OwnerIds=['self'])   ///give particular account id if required inplace of self or use different fileters instead of ownerid 
+
+
+
+	instance_response = ec2.describe_instances(Filters=[
+			{
+				'Name': 'instnace-state-name',
+				'Values': [
+					'running',
+				]
+			},
+		],
+
+
+
+	activeinstance_id = set()
+
+	for reservation in instance_response['Reservations']:
+		for instance in reservation['Instances']:
+			activeinstance_id.add(instance[InstanceId])
+			
+		
+///To understand instance for loop check this document https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/describe_instances.html///		
+
+
+	for snapshot in response['Snapshots']:  ---> (because of response syntax we written like this 
+		snapshot_id = snapshot['SnapshotId]
+		volume_id   = snapshot.get('VolumeId')   check why get is used when we retrived snapshot['SnapshotId] in the above like this 
+	
+
+// To understnad the snapshot for loop check this doc https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/paginator/DescribeSnapshots.html//	
+	
+		if not volume_id:
+			ec2.delete_snapshots(SnapshotId = snapshot_id)
+		else:
+			try:
+				volume_response = ec2.describe_volumes(VolumeIds = [volume_id])
+				if not volume_response['Volumes'][0]['Attachment']:   --->> //here we checked volume[0] should be attachments then it means it attched to some ec2 check the doc for clear understandi//
+					ec2.delete_snapshots(SnapshotId = snapshot_id)
+			except:
+			some error 
